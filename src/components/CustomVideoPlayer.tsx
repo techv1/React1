@@ -6,6 +6,7 @@ import Slider from '@react-native-community/slider';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, FadeIn, FadeOut, runOnJS, useAnimatedProps, useAnimatedReaction } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 interface CustomVideoPlayerProps {
   links: Record<string, string>;
@@ -28,6 +29,33 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ links, tit
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1.0);
+
+  // Orientation & FS Support
+  const toggleFullScreen = useCallback(async () => {
+    if (!isFullScreen) {
+      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      setIsFullScreen(true);
+      videoRef.current?.presentFullscreenPlayer();
+    } else {
+      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+      setIsFullScreen(false);
+      videoRef.current?.dismissFullscreenPlayer();
+    }
+  }, [isFullScreen]);
+
+  // Handle hardware FS events
+  const onFullscreenPlayerWillPresent = () => setIsFullScreen(true);
+  const onFullscreenPlayerWillDismiss = () => {
+    setIsFullScreen(false);
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+  };
+
+  useEffect(() => {
+    return () => {
+      // Ensure we reset orientation on unmount
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+    };
+  }, []);
 
   const controlsOpacity = useSharedValue(1);
   const progressRef = useRef(0);
@@ -161,6 +189,10 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ links, tit
             onBuffer={({ isBuffering }) => setIsLoading(isBuffering)}
             rate={playbackRate}
             
+            // FS Events
+            onFullscreenPlayerWillPresent={onFullscreenPlayerWillPresent}
+            onFullscreenPlayerWillDismiss={onFullscreenPlayerWillDismiss}
+            
             // ExoPlayer & Performance Optimizations
             useTextureView={true}
             useExoShutter={false}
@@ -275,11 +307,10 @@ export const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ links, tit
 
                 <View className="flex-row justify-between items-center mt-3">
                   <View className="flex-row space-x-4"></View>
-                  <TouchableOpacity onPress={() => setIsFullScreen(!isFullScreen)} className="p-1">
+                  <TouchableOpacity onPress={toggleFullScreen} className="p-1">
                     {isFullScreen ? <Minimize color="white" size={22} /> : <Maximize color="white" size={22} />}
                   </TouchableOpacity>
-                </View>
-              </View>
+                </View>              </View>
             </LinearGradient>
           </Animated.View>
 

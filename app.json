@@ -37,7 +37,8 @@
             "imageWidth": 76
           }
         }
-      ]
+      ],
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true
@@ -50,7 +51,6 @@
         "projectId": "d58b294c-08d8-4635-9dc4-88ba0e0fd515"
       }
     },
-    "owner": "ilovevishnu",
-    "newArchEnabled": true
+    "owner": "ilovevishnu"
   }
 }
