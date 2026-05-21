@@ -23,6 +23,44 @@ async function getVideos(): Promise<Video[]> {
   }
 }
 
+import { similarityScore, seededShuffle } from './utils';
+
+export async function fetchRecommendedVideos(history: Video[] = [], seed: number = Date.now(), offset = 0, limit = 20): Promise<VideoPage> {
+  const allVideos = await getVideos();
+  
+  let result: Video[];
+  
+  if (history.length > 0) {
+    // 1. Calculate scores for all videos
+    const scored = allVideos.map(v => ({
+      video: v,
+      score: similarityScore(history[history.length - 1], v, history)
+    }));
+    
+    // 2. Sort by score and then shuffle slightly within tiers to keep it fresh
+    // We sort descending by score
+    result = scored
+      .sort((a, b) => b.score - a.score)
+      .map(s => s.video);
+      
+    // 3. Add a bit of randomness to the top results so it's not identical every time
+    // We shuffle the first 100 results based on the seed
+    const topTier = result.slice(0, 100);
+    const shuffledTop = seededShuffle(topTier, seed);
+    result = [...shuffledTop, ...result.slice(100)];
+  } else {
+    // Fallback: Just seeded shuffle if no history
+    result = seededShuffle(allVideos, seed);
+  }
+
+  const paginated = result.slice(offset, offset + limit);
+  
+  return {
+    videos: paginated,
+    nextOffset: (offset + limit) < result.length ? offset + limit : null,
+  };
+}
+
 export async function fetchVideosPage(search = '', offset = 0, limit = PAGE_SIZE): Promise<VideoPage> {
   const allVideos = await getVideos();
   let filtered = allVideos;
@@ -55,6 +93,15 @@ export interface PlaybackInfo {
     apiResponseStatus?: number;
     rawPageSnippet?: string;
   };
+}
+
+export async function getVideoById(id: string): Promise<Video | null> {
+  const all = await getVideos();
+  return all.find(v => v.id === id) ?? null;
+}
+
+export async function getAllVideos(): Promise<Video[]> {
+  return getVideos();
 }
 
 /**

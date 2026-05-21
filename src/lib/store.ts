@@ -7,6 +7,7 @@ export const useStore = create(
     {
       historyStack: [] as Video[],
       stats: { loaded: 0, cached: 0, played: 0 } as Stats,
+      watchProgress: {} as Record<string, number>,
     },
     (set) => ({
       addHistory: (video: Video) =>
@@ -25,6 +26,10 @@ export const useStore = create(
       incrementPlayed: () =>
         set((state) => ({
           stats: { ...state.stats, played: state.stats.played + 1 },
+        })),
+      setWatchProgress: (id: string, pos: number) =>
+        set((state) => ({
+          watchProgress: { ...state.watchProgress, [id]: pos },
         })),
     })
   )
