@@ -102,66 +102,55 @@ export default function VideoScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-black">
-      {/* Dynamic Header - Minimalist */}
-      <View className="flex-row items-center px-4 py-3 bg-black">
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft color="white" size={28} />
-        </TouchableOpacity>
-        <Text className="text-zinc-400 font-medium text-sm flex-1" numberOfLines={1}>
-          Playing: {video.title}
-        </Text>
-      </View>
-
-      {/* Optimized Video Player Section */}
-      <View className="w-full aspect-video bg-zinc-950 border-b border-zinc-900 shadow-2xl z-10">
-        {video && Platform.OS === 'web' && (
-          <VideoExtractor 
-            embedUrl={video.embedUrl || `https://www.eporner.com/embed/${video.id}/`} 
-            onVideoFound={handleVideoFound} 
-          />
-        )}
-        {activeLinks ? (
-          <CustomVideoPlayer 
-            links={activeLinks} 
-            title={video.title} 
-            onClose={() => router.back()} 
-            referer={video.embedUrl || `https://www.eporner.com/embed/${video.id}/`}
-            startPosition={savedPosition}
-            onProgressUpdate={(pos) => setWatchProgress(id as string, pos)}
-          />
-        ) : (
-          <View className="flex-1 justify-center items-center p-6">
-            {isResolving ? (
-               <>
-                 <ActivityIndicator color="#3b82f6" size="large" />
-                 <Text className="text-zinc-500 mt-4 text-center font-medium">Resolving secure playback links...</Text>
-               </>
-            ) : (
-              <View className="bg-zinc-800/50 p-4 rounded-2xl border border-zinc-700 w-full">
-                <Text className="text-red-400 font-bold mb-2">Extraction Failed</Text>
-                <Text className="text-zinc-400 text-xs mb-4">We couldn't resolve a direct playback link for this video.</Text>
-                <TouchableOpacity 
-                  onPress={async () => {
-                    setPlayback(null);
-                    setWebViewUrl(null);
-                    const pb = await resolvePlayback(video);
-                    setPlayback(pb);
-                  }}
-                  className="bg-zinc-700 py-2 rounded-lg"
-                >
-                  <Text className="text-white text-center font-bold">Retry Extraction</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        )}
-      </View>
-
       {/* Recommendation & Content Feed */}
       <ScrollView 
         className="flex-1 bg-black"
         showsVerticalScrollIndicator={false}
       >
+        {/* Optimized Video Player Section */}
+        <View className="w-full aspect-video bg-zinc-950 border-b border-zinc-900 shadow-2xl z-10">
+          {video && Platform.OS === 'web' && (
+            <VideoExtractor 
+              embedUrl={video.embedUrl || `https://www.eporner.com/embed/${video.id}/`} 
+              onVideoFound={handleVideoFound} 
+            />
+          )}
+          {activeLinks ? (
+            <CustomVideoPlayer 
+              links={activeLinks} 
+              onClose={() => router.back()} 
+              referer={video.embedUrl || `https://www.eporner.com/embed/${video.id}/`}
+              startPosition={savedPosition}
+              onProgressUpdate={(pos) => setWatchProgress(id as string, pos)}
+            />
+          ) : (
+            <View className="flex-1 justify-center items-center p-6">
+              {isResolving ? (
+                <>
+                  <ActivityIndicator color="#3b82f6" size="large" />
+                  <Text className="text-zinc-500 mt-4 text-center font-medium">Resolving secure playback links...</Text>
+                </>
+              ) : (
+                <View className="bg-zinc-800/50 p-4 rounded-2xl border border-zinc-700 w-full">
+                  <Text className="text-red-400 font-bold mb-2">Extraction Failed</Text>
+                  <Text className="text-zinc-400 text-xs mb-4">We couldn't resolve a direct playback link for this video.</Text>
+                  <TouchableOpacity 
+                    onPress={async () => {
+                      setPlayback(null);
+                      setWebViewUrl(null);
+                      const pb = await resolvePlayback(video);
+                      setPlayback(pb);
+                    }}
+                    className="bg-zinc-700 py-2 rounded-lg"
+                  >
+                    <Text className="text-white text-center font-bold">Retry Extraction</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+
         <View className="p-5 bg-zinc-950/30">
           <Text className="text-white text-xl font-bold mb-2 leading-7">{video.title}</Text>
           <View className="flex-row items-center mb-5">
